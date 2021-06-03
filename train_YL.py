@@ -428,8 +428,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', type=str, default='yolov5s.pt', help='initial weights path')
     parser.add_argument('--cfg', type=str, default='yolov5s.yaml', help='model.yaml path')
-    parser.add_argument('--brand', type=str, default='Prada', help='brand')
-    # parser.add_argument('--data', type=str, default='data/Prada.yaml', help='data.yaml path')
+    # parser.add_argument('--brand', type=str, default='Prada', help='brand')
+    parser.add_argument('--data', type=str, default='data/znlsg.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='data/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=300)
     parser.add_argument('-b', '--batch-size', type=int, default=32, help='total batch size for all GPUs')
@@ -443,11 +443,11 @@ if __name__ == '__main__':
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache-images', action='store_true', help='cache images for faster training')
     parser.add_argument('--image-weights', action='store_true', help='use weighted image selection for training')
-    # parser.add_argument('-dir', '--data-dir', dest='data_dir', type=str, default='../data/Prada/Detection/data', help='dataset dir')
+    parser.add_argument('-dir', '--data-dir', dest='data_dir', type=str, default='../../data/cssjj/train', help='dataset dir')
     parser.add_argument('-train', '-train_txtl_file', dest='train_txt',
-                        type=str, default='train.txt', help="train txt path")
+                        type=str, default='a_train.txt', help="train txt path")
     parser.add_argument('-test', '-test_txtl_file', dest='test_txt',
-                        type=str, default='test.txt', help="test txt file")
+                        type=str, default='a_test.txt', help="test txt file")
     parser.add_argument('--device', default='0,1,2,3', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%')
     parser.add_argument('--single-cls', action='store_true', help='train as single-class dataset')
@@ -470,8 +470,8 @@ if __name__ == '__main__':
 
     # Set DDP variables
     opt.total_batch_size = opt.batch_size
-    opt.data = f'data/{opt.brand}.yaml'
-    opt.data_dir = f'../data/{opt.brand}/Detection/data'
+    # opt.data = f'data/{opt.brand}.yaml'
+    # opt.data_dir = f'../data/{opt.brand}/Detection/data'
 
     # print('*'*30, 'local_rank', opt.local_rank, '*'*30)
     opt.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1     # 进程数? 几个主机?

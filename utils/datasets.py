@@ -679,8 +679,9 @@ class MyYOLO4dataset(Dataset):  # for training/testing
                         image_l = []
                         label_l = []
                         for x in t:
-                            ll = x.split()
-                            assert len(ll) == 2
+                            ll = x.split('txt ')
+                            ll[0] = ll[0]+'txt'
+                            assert len(ll) == 2, f'len: {len(ll)}  {ll}'
                             ll = [os.path.join(opt.data_dir, x) for x in ll]
                             label_l.append(ll[0])
                             image_l.append(ll[1])
