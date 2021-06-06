@@ -11,26 +11,17 @@ from matplotlib.patches import Polygon, Rectangle
 
 
 
-data_dir = "../../../data"
-train_a_annotations_file = os.path.join(data_dir, "cssjj/train/a_annotations.json")
-train_b_annotations_file = os.path.join(data_dir, "cssjj/train/b_annotations.json")
-
-test_a_annotations_file = os.path.join(data_dir, "cssjj/test/a_annotations.json")
-test_b_annotations_file = os.path.join(data_dir, "cssjj/test/b_annotations.json")
-
-train_a_imgs_dir = os.path.join(data_dir, 'cssjj/train/a_images')
-
 class ZNLSG_COCO(COCO):
 
     def __init__(self, annotation_file=None):
         COCO.__init__(self, annotation_file)
         self.colors = self.color_list()
         self.annotation_file = annotation_file
-        self.annos_dir = os.path.dirname(annotation_file)
+        self.data_dir = os.path.dirname(annotation_file)
         if 'a_annotations' in annotation_file:
-            self.imgs_dir = os.path.join(self.annos_dir, 'a_images')
+            self.imgs_dir = os.path.join(self.data_dir, 'a_images')
         elif 'b_annotations' in annotation_file:
-            self.imgs_dir = os.path.join(self.annos_dir, 'b_images')
+            self.imgs_dir = os.path.join(self.data_dir, 'b_images')
         else:
             raise Exception
 
@@ -88,8 +79,19 @@ class ZNLSG_COCO(COCO):
 #%%
 
 if __name__ == '__main__':
+    data_dir = "../../../data"
+    train_a_annotations_file = os.path.join(data_dir, "cssjj/train/a_annotations.json")
+    train_b_annotations_file = os.path.join(data_dir, "cssjj/train/b_annotations.json")
+
+    test_a_annotations_file = os.path.join(data_dir, "cssjj/test/a_annotations.json")
+    test_b_annotations_file = os.path.join(data_dir, "cssjj/test/b_annotations.json")
+
+    train_a_imgs_dir = os.path.join(data_dir, 'cssjj/train/a_images')
 
     train_a_coco = ZNLSG_COCO(train_a_annotations_file)
+    train_b_coco = ZNLSG_COCO(train_b_annotations_file)
+    test_a_coco = ZNLSG_COCO(test_a_annotations_file)
+    trest_b_coco = ZNLSG_COCO(test_b_annotations_file)
     # train_a_coco.showImgs([0,1,2,3])
 
 

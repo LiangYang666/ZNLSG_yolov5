@@ -1,12 +1,12 @@
 import os
 import json
-data_dir = "../../../data"
-train_a_annotations_file = os.path.join(data_dir, "cssjj/train/a_annotations.json")
-train_b_annotations_file = os.path.join(data_dir, "cssjj/train/b_annotations.json")
-
-test_a_annotations_file = os.path.join(data_dir, "cssjj/test/a_annotations.json")
-test_b_annotations_file = os.path.join(data_dir, "cssjj/test/b_annotations.json")
 if __name__ == "__main__":
+    data_dir = "../../../data"
+    train_a_annotations_file = os.path.join(data_dir, "cssjj/train/a_annotations.json")
+    train_b_annotations_file = os.path.join(data_dir, "cssjj/train/b_annotations.json")
+
+    test_a_annotations_file = os.path.join(data_dir, "cssjj/test/a_annotations.json")
+    test_b_annotations_file = os.path.join(data_dir, "cssjj/test/b_annotations.json")
     with open(train_a_annotations_file, 'r') as f:
         train_a_annotations = json.load(f)
     with open(train_b_annotations_file, 'r') as f:
