@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 
 from utils.plots import plot_images, output_to_target
 from tqdm import tqdm
-from zizhuantools.tool3_labelresp import class_names
+# from zizhuantools.tool3_labelresp import class_names
 
 
 def detect(save_img=False):
@@ -31,12 +31,13 @@ def detect(save_img=False):
 
     # Directories
     save_name_add = os.path.basename(str(weights)).split('.')[0]  # 名称中要增加保存的字符
-    # print(Path(opt.data_dir) / 'runs' / 'test' /(opt.name+f'({save_name_add})'))
-    save_dir = Path(increment_path(Path(opt.data_dir) / 'runs' / 'dect' / (opt.name + f'_{save_name_add}_'),
-                                   exist_ok=opt.exist_ok))  # increment run
+    weights = Path(opt.data_dir).parent / weights
+    save_dir = Path(
+        increment_path(weights.parent.parent / ('test' + f'_{save_name_add}_'), exist_ok=opt.exist_ok))  # increment run
+    weights = str(weights)
 
     # save_dir = Path(increment_path(Path(opt.data_dir) / Path(opt.project) / opt.name, exist_ok=opt.exist_ok))  # increment run
-    (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
+    (save_dir / 'labels_dect' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
 
     # Initialize
     set_logging()
@@ -44,7 +45,6 @@ def detect(save_img=False):
     half = device.type != 'cpu'  # half precision only supported on CUDA
 
     # Load model
-    weights = os.path.join(opt.data_dir, weights)
     model = attempt_load(weights, map_location=device)  # load FP32 model
     imgsz = check_img_size(imgsz, s=model.stride.max())  # check img_size
     if half:
@@ -142,11 +142,11 @@ def detect(save_img=False):
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
                     # conf : tensor(0.52002, device='cuda:0')
-                    # if save_txt:  # Write to file
-                    #     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                    #     line = (cls, *xywh, conf) if opt.save_conf else (cls, *xywh)  # label format
-                    #     with open(txt_path + '.txt', 'a') as f:
-                    #         f.write(('%g ' * len(line)).rstrip() % line + '\n')
+                    if save_txt:  # Write to file
+                        xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                        line = (cls, *xywh, conf) if opt.save_conf else (cls, *xywh)  # label format
+                        with open(save_dir / 'labels_dect' / (p.stem + '.txt'), 'a') as f:
+                            f.write(('%g ' * len(line)).rstrip() % line + '\n')
                     if save_json_path:
                         # xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
                         # xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4))).view(-1).tolist()  # normalized xywh
@@ -160,17 +160,17 @@ def detect(save_img=False):
                         dict = {'cut_name': p.name, 'cut_category': category,
                                 'confidence': confidence, 'bbox': [x0, y0, x1, y1]}
                         dectjson_list.append(dict)
-                        if save_each_cut:
-                            cv2.rectangle(img_orgin, (x0, y0), (x1, y1), (255, 0, 0), thickness=1)
-                            if 'by' in weights:
-                                dis_name = class_names[category]
-                            elif 'zx' in weights:
-                                dis_name = class_names[category+2]
-                            cv2.putText(img_orgin, f'{dis_name}  {confidence}', (x0, y0-2), cv2.FONT_HERSHEY_SIMPLEX,
-                                        fontScale=0.7, color=(0, 255, 255),
-                                        thickness=2)
-                if save_each_cut:
-                    cv2.imwrite(save_path, img_orgin)
+                        # if save_each_cut:
+                        #     cv2.rectangle(img_orgin, (x0, y0), (x1, y1), (255, 0, 0), thickness=1)
+                        #     if 'by' in weights:
+                        #         dis_name = class_names[category]
+                        #     elif 'zx' in weights:
+                        #         dis_name = class_names[category+2]
+                        #     cv2.putText(img_orgin, f'{dis_name}  {confidence}', (x0, y0-2), cv2.FONT_HERSHEY_SIMPLEX,
+                        #                 fontScale=0.7, color=(0, 255, 255),
+                        #                 thickness=2)
+                # if save_each_cut:
+                #     cv2.imwrite(save_path, img_orgin)
         import json
         if batch_i % 5 == 0:
             with open(save_json_path, 'w') as f:
@@ -203,18 +203,20 @@ def detect(save_img=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
-    parser.add_argument('-w', '--weights', type=str, default='runs/train/exp(allzx0)(OK 600 yolov5s)/weights/ckp_allzx0_4c_epoch600.pt', help='model.pt path')
+    parser.add_argument('--weights', type=str, default='yolov5_rundata/train6/weights/ckp_a_train_1c_epoch250.pt', help='model.pt path(s)')
     # parser.add_argument('--source', type=str, default='tile_round1_testA_20201231/testA_imgs_zxcutsave',
     #                     help='source')  # file/folder, 0 for webcam
-    parser.add_argument('-s', '--source', type=str, default='tile_round1_testA_20201231/testA_imgs',
+    parser.add_argument('-s', '--source', type=str, default='a_images',
                         help='source')  # file/folder, 0 for webcam
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
     parser.add_argument('--device', default='0,1,2,3', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--view-img', action='store_true', help='display results')
-    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    # parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+    # parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    parser.add_argument('--save-txt', default=True, help='save results to *.txt')
+    parser.add_argument('--save-conf', default=True, help='save confidences in --save-txt labels')
     parser.add_argument('--classes', nargs='+', type=int, help='filter by class: --class 0, or --class 0 2 3')
     parser.add_argument('--agnostic-nms', action='store_true', help='class-agnostic NMS')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
@@ -222,7 +224,7 @@ if __name__ == '__main__':
     parser.add_argument('--project', default='runs/detect', help='save results to project/name')
     parser.add_argument('--name', default='exp', help='save results to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
-    parser.add_argument('-dir', '--data-dir', dest='data_dir', type=str, default='../data/CS1', help='dataset dir')
+    parser.add_argument('-dir', '--data-dir', dest='data_dir', type=str, default='../../data/cssjj/test', help='dataset dir')
     parser.add_argument('-b', '--batch-size', type=int, default=1, help='size of each image batch')
     # parser.add_argument('-test', '-test_txtl_file', dest='test_txt',
     #                     type=str, default='testby0.txt', help="test txt file")

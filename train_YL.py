@@ -387,7 +387,6 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
                             'wandb_id': wandb_run.id if wandb else None}
 
                 # Save last, best and delete
-
                 ckp_info = opt.train_txt.split('.')[0]+f'_{nc}c'
                 if (epoch+1) % 10 == 0:
                     torch.save(ckpt, str(wdir)+os.sep+f'ckp_{ckp_info}_epoch{epoch + 1}.pt')
@@ -426,14 +425,14 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', type=str, default='yolov5s.pt', help='initial weights path')
-    parser.add_argument('--cfg', type=str, default='yolov5s.yaml', help='model.yaml path')
+    parser.add_argument('--weights', type=str, default='yolov5x.pt', help='initial weights path')
+    parser.add_argument('--cfg', type=str, default='yolov5x.yaml', help='model.yaml path')
     # parser.add_argument('--brand', type=str, default='Prada', help='brand')
     parser.add_argument('--data', type=str, default='data/znlsg.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='data/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=300)
-    parser.add_argument('-b', '--batch-size', type=int, default=32, help='total batch size for all GPUs')
-    parser.add_argument('--img-size', nargs='+', type=int, default=[640, 640], help='[train, test] image sizes')
+    parser.add_argument('-b', '--batch-size', type=int, default=16, help='total batch size for all GPUs')
+    parser.add_argument('--img-size', nargs='+', type=int, default=[960, 960], help='[train, test] image sizes')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
     parser.add_argument('--resume', nargs='?', const=True, default=False, help='resume most recent training')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
@@ -451,6 +450,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', default='0,1,2,3', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     parser.add_argument('--multi-scale', action='store_true', help='vary img-size +/- 50%%')
     parser.add_argument('--single-cls', action='store_true', help='train as single-class dataset')
+    # parser.add_argument('--single-cls', default=True, help='train as single-class dataset')
     parser.add_argument('--adam', action='store_true', help='use torch.optim.Adam() optimizer')
     parser.add_argument('--sync-bn', action='store_true', help='use SyncBatchNorm, only available in DDP mode')
     parser.add_argument('--local_rank', type=int, default=-1, help='DDP parameter, do not modify')
@@ -470,8 +470,6 @@ if __name__ == '__main__':
 
     # Set DDP variables
     opt.total_batch_size = opt.batch_size
-    # opt.data = f'data/{opt.brand}.yaml'
-    # opt.data_dir = f'../data/{opt.brand}/Detection/data'
 
     # print('*'*30, 'local_rank', opt.local_rank, '*'*30)
     opt.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1     # 进程数? 几个主机?
@@ -523,7 +521,7 @@ if __name__ == '__main__':
     if not opt.evolve:
         tb_writer = None  # init loggers
         if opt.global_rank in [-1, 0]:
-            logger.info(f'Start Tensorboard with "tensorboard --logdir {opt.project}", view at http://localhost:6006/')
+            logger.info(f'Start Tensorboard with "tensorboard --logdir {opt.save_dir}", view at http://localhost:6006/')
             tb_writer = SummaryWriter(opt.save_dir)  # Tensorboard
         train(hyp, opt, device, tb_writer, wandb)
 

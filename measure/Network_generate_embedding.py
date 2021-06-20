@@ -7,6 +7,12 @@ import ipdb
 import torchvision
 from torch.autograd import Variable
 
+class Identity(nn.Module):
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+        return x
 
 def resnet18_embedding():
     model = torchvision.models.resnet18(pretrained=True)
@@ -32,6 +38,16 @@ def resnet18_embedding():
     model._forward_impl = types.MethodType(_forward_impl, model)
     del model.fc
     return model
+
+def prototypical_net(pretrained_dict = '/media/D_4TB/YL_4TB/Competitions/ZNLSG_21_XinYe/data/cssjj/rundata/metalearning/models_trained/ResNet50/checkpoints/checkpoint_175.pt'):
+    model = torchvision.models.__dict__['resnet50'](pretrained=False)
+    # model.fc = Identity()
+    lin = nn.Linear(model.fc.in_features, 512)
+    model.fc = lin
+    checkpoint = torch.load(pretrained_dict)
+    model.load_state_dict(checkpoint['state_dict'])
+    return model
+
 
 if __name__ =="__main__":
 

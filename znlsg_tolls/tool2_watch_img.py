@@ -51,10 +51,10 @@ class ZNLSG_COCO(COCO):
             category_name = category_info['name']
             c = list(self.colors[category_id % len(self.colors)])
             c = [i/255 for i in c]
-            [bbox_x, bbox_y, bbox_w, bbox_h] = ann['bbox']
+            [bbox_x1, bbox_y1, bbox_w, bbox_h] = ann['bbox']
             ax.add_patch(
-                plt.Rectangle((bbox_x, bbox_y), bbox_w, bbox_h, color=c, fill=False, linewidth=2))
-            ax.text(bbox_x, bbox_y, category_name, fontsize=10, color='white',
+                plt.Rectangle((bbox_x1, bbox_y1), bbox_w, bbox_h, color=c, fill=False, linewidth=2))
+            ax.text(bbox_x1, bbox_y1, category_name, fontsize=10, color='white',
                               bbox={'facecolor': c, 'alpha': 0.5})
             # ax.text(bbox_x, bbox_y-3, category_name, fontsize=16, color=c)
 
@@ -86,13 +86,16 @@ if __name__ == '__main__':
     test_a_annotations_file = os.path.join(data_dir, "cssjj/test/a_annotations.json")
     test_b_annotations_file = os.path.join(data_dir, "cssjj/test/b_annotations.json")
 
+    pred_train_a_annotations_file = os.path.join(data_dir, "cssjj/train/pred_a_annotations.json")
+
     train_a_imgs_dir = os.path.join(data_dir, 'cssjj/train/a_images')
 
     train_a_coco = ZNLSG_COCO(train_a_annotations_file)
     train_b_coco = ZNLSG_COCO(train_b_annotations_file)
     test_a_coco = ZNLSG_COCO(test_a_annotations_file)
-    trest_b_coco = ZNLSG_COCO(test_b_annotations_file)
-    # train_a_coco.showImgs([0,1,2,3])
+    test_b_coco = ZNLSG_COCO(test_b_annotations_file)
+    pred_train_a_coco = ZNLSG_COCO(pred_train_a_annotations_file)
+    pred_train_a_coco.showImgs(list(range(0, 100)))
 
 
 

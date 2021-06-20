@@ -305,31 +305,32 @@ def test(data,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='test.py')
     # parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.pt', help='model.pt path(s)')
-    parser.add_argument('--weights', type=str, default='yolov5_rundata/train/weights/best.pt', help='model.pt path(s)')
+    parser.add_argument('--weights', type=str, default='yolov5_rundata/train6/weights/ckp_a_train_1c_epoch250.pt', help='model.pt path(s)')
     parser.add_argument('--brand', type=str, default='Prada', help='brand')
     # parser.add_argument('--data', type=str, default='data/zxdata.yaml', help='*.data path')
-    parser.add_argument('-b', '--batch-size', type=int, default=4, help='size of each image batch')
+    parser.add_argument('-b', '--batch-size', type=int, default=64, help='size of each image batch')
     parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
     parser.add_argument('--conf-thres', type=float, default=0.001, help='object confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.6, help='IOU threshold for NMS')
     parser.add_argument('--task', default='val', help="'val', 'test', 'study'")
     parser.add_argument('--device', default='0,1,2,3', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
-    parser.add_argument('--single-cls', action='store_true', help='treat as single-class dataset')
+    # parser.add_argument('--single-cls', action='store_true', help='treat as single-class dataset')
+    parser.add_argument('--single-cls', default=True, help='treat as single-class dataset')
     parser.add_argument('--augment', action='store_true', help='augmented inference')
     parser.add_argument('--verbose', action='store_true', help='report mAP by class')
-    parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
-    parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    # parser.add_argument('--save-txt', action='store_true', help='save results to *.txt')
+    # parser.add_argument('--save-conf', action='store_true', help='save confidences in --save-txt labels')
+    parser.add_argument('--save-txt', default=True, help='save results to *.txt')
+    parser.add_argument('--save-conf', default=True, help='save confidences in --save-txt labels')
     parser.add_argument('--save-json', action='store_true', help='save a cocoapi-compatible JSON results file')
     parser.add_argument('--project', default='runs/test', help='save to project/name')
-    # parser.add_argument('-dir', '--data-dir', dest='data_dir', type=str, default='../data/CS1', help='dataset dir')
+    parser.add_argument('-dir', '--data-dir', dest='data_dir', type=str, default='../../data/cssjj/test', help='dataset dir')
     parser.add_argument('-test', '-test_txtl_file', dest='test_txt',
                         type=str, default='test.txt', help="test txt file")
     parser.add_argument('--name', default='exp', help='save to project/name')
     parser.add_argument('--exist-ok', action='store_true', help='existing project/name ok, do not increment')
 
     opt = parser.parse_args()
-    opt.data = f'data/{opt.brand}.yaml'
-    opt.data_dir = f'../data/{opt.brand}/Detection/data'
 
     opt.save_json |= opt.data.endswith('coco.yaml')
     opt.data = check_file(opt.data)  # check file

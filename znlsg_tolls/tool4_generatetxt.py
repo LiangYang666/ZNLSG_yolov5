@@ -1,15 +1,20 @@
 import os
 
-from tool2_watch_img import *
+from tool2_watch_img import ZNLSG_COCO
 
 def generate_all_labels_from_json(annotations_file):
-    assert 'a_annotations' in annotations_file
+    assert ('a_annotations' in annotations_file) or ('b_annotations' in annotations_file)
+    if 'a_annotations' in annotations_file:
+        ab ='a'
+    else:
+        ab = 'b'
+
     coco = ZNLSG_COCO(annotations_file)
     parent_dir = os.path.dirname(annotations_file)
-    labels_path = os.path.join(parent_dir, 'a_labels')
-    images_path = os.path.join(parent_dir, 'a_images')
+    labels_path = os.path.join(parent_dir, f'{ab}_labels')
+    images_path = os.path.join(parent_dir, f'{ab}_images')
 
-    all_yolov5_imgs_txts_file = os.path.join(parent_dir, 'a_all_yolov5_imgs_txts.txt')
+    all_yolov5_imgs_txts_file = os.path.join(parent_dir, f'{ab}_all_yolov5_imgs_txts.txt')
     check_create_path(labels_path)
 
     for imageid in coco.getImgIds():
@@ -41,8 +46,8 @@ def generate_all_labels_from_json(annotations_file):
         for image_path in images_l:
             label_path = image_path.split('.')[0]+'.txt'
             if label_path in labels_l:
-                txt = os.path.join('a_labels', label_path)
-                img = os.path.join('a_images', image_path)
+                txt = os.path.join(f'{ab}_labels', label_path)
+                img = os.path.join(f'{ab}_images', image_path)
                 f.write(' '.join([txt, img])+'\n')
                 nums += 1
         print(f'Total {nums} available!')
@@ -59,9 +64,15 @@ def check_create_path(path):
 
 
 if __name__ == '__main__':
+    data_dir = "../../../data"
+    train_a_annotations_file = os.path.join(data_dir, "cssjj/train/a_annotations.json")
+    train_b_annotations_file = os.path.join(data_dir, "cssjj/train/b_annotations.json")
+
+    test_a_annotations_file = os.path.join(data_dir, "cssjj/test/a_annotations.json")
+    test_b_annotations_file = os.path.join(data_dir, "cssjj/test/b_annotations.json")
 
     # train_a_coco = ZNLSG_COCO(train_a_annotations_file)
-    generate_all_labels_from_json(train_a_annotations_file)
+    generate_all_labels_from_json(train_b_annotations_file)
 
 
 

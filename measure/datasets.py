@@ -18,9 +18,37 @@ import ipdb
 
 # json_file = '../data/mydata/all.json'
 
+mean = np.array([0.485, 0.456, 0.406])
+std = np.array([0.229, 0.224, 0.225])
+if mean[0] > 1 or mean[1] > 1 or mean[2] > 1:
+    print('One or more of the subtract mean values were above 1, dividing by 255...')
+    mean /= 255
+
+if std[0] > 1 or std[1] > 1 or std[2] > 1:
+    print('One or more of the subtract std values were above 1, dividing by 255...')
+    std /= 255
+print('Normalizing by mean of %.4f, %.4f, %.4f' % (mean[0], mean[1], mean[2]))
+print('Normalizing by std of %.4f, %.4f, %.4f' % (std[0], std[1], std[2]))
+
+normalize = transforms.Normalize(mean=mean, std=std)
+mytrans = transforms.Compose([
+    transforms.Resize((224, 244)),
+    # transforms.RandomHorizontalFlip(),
+    # transforms.CenterCrop(64),
+    transforms.ToTensor(),
+    normalize
+    # transforms.Normalize((.5, .5, .5), (.5, .5, .5)),
+])
 
 class ZNLSG_eval_imgs_dataset(Dataset):
     def __init__(self, labels_dir='a_labels'):
+        assert 'a_labels' in labels_dir
+        # if 'test' in labels_dir:
+        #     self.line_length = 6
+        # else:
+        #     self.line_length = 5
+
+        self.line_length = 6
         self.labels_dir = labels_dir
         self.data_dir = os.path.dirname(labels_dir)
         self.imgs_dir = os.path.join(self.data_dir, 'a_images')
@@ -41,37 +69,33 @@ class ZNLSG_eval_imgs_dataset(Dataset):
         boxxes = []
         for line in lines:
             ll = line.split()
-            assert ll.__len__() == 5
-            _, x, y, w, h = ll
-            boxxes.append([img_name, float(x), float(y), float(w), float(h)])
+            assert ll.__len__() == self.line_length
+            if self.line_length==5:
+                _, x, y, w, h = ll
+                conf = 1.
+            else:
+                _, x, y, w, h, conf = ll
+            boxxes.append([img_name, float(x), float(y), float(w), float(h), float(conf)])
         return boxxes
 
     def __getitem__(self, index):
-        img_name, x_f, y_f, w_f, h_f = self.bboxs_labels[index]
+        img_name, x_f, y_f, w_f, h_f, conf = self.bboxs_labels[index]
         img = Image.open(os.path.join(self.imgs_dir, img_name))
         width = img.width
         height = img.height
-        x, w = x_f*width,  h_f*width
+        x, w = x_f*width,  w_f*width
         y, h = y_f*height, h_f*height
         x1, x2 = x - w/2, x + w/2
         y1, y2 = y - h/2, y + h/2
         x1, y1 = int(x1), int(y1)
         x2, y2 = int(x2+0.8), int(y2+0.8)
         img = img.crop((x1, y1, x2, y2))
-        mytrans = transforms.Compose([
-            transforms.Resize((224, 244)),
-            # transforms.RandomHorizontalFlip(),
-            # transforms.CenterCrop(64),
-            transforms.ToTensor(),
-            # transforms.Normalize((.5, .5, .5), (.5, .5, .5)),
-        ])
+
         img = mytrans(img)
-        return img, img_name, torch.tensor((x1, y1, x2, y2))
+        return img, img_name, torch.tensor((x1, y1, x2, y2, conf))
 
     def __len__(self):
         return len(self.bboxs_labels)
-
-
 
 
 
@@ -81,7 +105,6 @@ class ZNLSG_library_imgs_dataset(Dataset):
         self.data_dir = self.coco.data_dir
         self.imgs_dir = self.coco.imgs_dir
         self.bbox_AnnIds = self.coco.getAnnIds()
-
 
     def __getitem__(self, id):
         annotation_id = self.bbox_AnnIds[id]
@@ -96,32 +119,26 @@ class ZNLSG_library_imgs_dataset(Dataset):
         img_path = os.path.join(self.imgs_dir, image_name)
         img = Image.open(img_path)
         img = img.crop((x1, y1, x2, y2))
-        mytrans = transforms.Compose([
-            transforms.Resize((224, 244)),
-            # transforms.RandomHorizontalFlip(),
-            # transforms.CenterCrop(64),
-            transforms.ToTensor(),
-            # transforms.Normalize((.5, .5, .5), (.5, .5, .5)),
-        ])
+
         img = mytrans(img)
         return img, category_id
 
-
     def __len__(self):
         return len(self.bbox_AnnIds)
-class ZNLSG_bboxes_emebeddings_datasets(Dataset):
+
+
+class ZNLSG_bboxes_embeddings_datasets(Dataset):
     def __init__(self, embeddings_dir):
+        self.embeddings_dir = embeddings_dir
         self.eval_bboxes_embeddings_files = sorted(os.listdir(embeddings_dir))
 
     def __getitem__(self, id):
         file = self.eval_bboxes_embeddings_files[id]
-        bbox_embedding = torch.load(file)
-        return bbox_embedding
+        bbox_embedding = torch.load(os.path.join(self.embeddings_dir, file))
+        return bbox_embedding, file
 
     def __len__(self):
         return len(self.eval_bboxes_embeddings_files)
-
-
 
 
 
