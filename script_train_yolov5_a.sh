@@ -12,5 +12,6 @@ train_YL.py \
 --single-cls \
 --img-size 960 960 \
 --batch-size 16 \
---device 1,2,3 \
+--device 0,1,2,3 \
 --data-dir ../../data/cssjj/train \
+--save-inter 10

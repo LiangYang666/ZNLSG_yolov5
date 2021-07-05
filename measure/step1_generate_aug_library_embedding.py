@@ -8,16 +8,17 @@ import ipdb
 import torchvision
 from torch.autograd import Variable
 from Network_generate_embedding import resnet18_embedding, prototypical_net
-from datasets import ZNLSG_library_imgs_dataset
+from datasets import ZNLSG_library_imgs_dataset, ZNLSG_library_aug_imgs_dataset
 from torch.utils.data import DataLoader
 import sys
 from tqdm import tqdm
 import shutil
 
-batch_size = 20
-data_dir = "../../../data/cssjj/test"
+batch_size = 10
+data_dir = "../../../data/cssjj/train"
 
 if __name__ =="__main__":
+    os.environ["CUDA_VISIBLE_DEVICES"] = '1'
     if len(sys.argv) == 2:
         os.environ["CUDA_VISIBLE_DEVICES"] = sys.argv[1]
     print('Step1 *-*-*-*-*-*-*-*-*-*')
@@ -36,7 +37,7 @@ if __name__ =="__main__":
 
     model = prototypical_net()
     model.to(device)
-    datasets = ZNLSG_library_imgs_dataset(annotations_file=b_annotations)
+    datasets = ZNLSG_library_aug_imgs_dataset(annotations_file=b_annotations)
     dataloader = DataLoader(datasets, batch_size, shuffle=False, num_workers=8)
     model.eval()
     have_save = {}

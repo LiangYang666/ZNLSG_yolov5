@@ -14,15 +14,18 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import shutil
 
-from measure.step1_generate_library_embedding import batch_size, data_dir
+from measure.step1_generate_aug_library_embedding import batch_size, data_dir
 
 if __name__ =="__main__":
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = '1'
     if len(sys.argv) == 2:
         os.environ["CUDA_VISIBLE_DEVICES"] = sys.argv[1]
 
+
     print('Step2 *-*-*-*-*-*-*-*-*-*')
     print('\tGenerate detected embeddings')
-    labels_dir = os.path.join(data_dir, 'a_labels_yolov5x_40')
+    labels_dir = os.path.join(data_dir, 'a_labels_yolov5x_40_p5')
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     embeddings_bboxs_dir = os.path.join(data_dir, 'a_embeddings', 'bboxs')
     if os.path.exists(embeddings_bboxs_dir):

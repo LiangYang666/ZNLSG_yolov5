@@ -21,10 +21,10 @@ from znlsg_tolls.tool2_watch_img import ZNLSG_COCO
 from path import data_dir, cs_train_dir, train_meta_learning_dir
 
 crop_dir = os.path.join(train_meta_learning_dir, 'train_crop_images')
-crop_all_dir = os.path.join(train_meta_learning_dir, 'train_crop_images', 'all')
+crop_all_dir = os.path.join(train_meta_learning_dir, 'train_crop_images', 'b_emebeddings_all')
 
 if __name__ == "__main__":
-    train_a_annotations_file = os.path.join(data_dir, "cssjj/train/a_annotations.json")
+    train_a_annotations_file = os.path.join(data_dir, "cssjj/train/b_annotations.json")
     train_a_coco = ZNLSG_COCO(train_a_annotations_file)
     if not os.path.exists(crop_dir):
         os.makedirs(crop_dir)

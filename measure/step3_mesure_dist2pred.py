@@ -19,7 +19,7 @@ from datasets import ZNLSG_library_imgs_dataset, ZNLSG_eval_imgs_dataset, ZNLSG_
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from znlsg_tolls.tool2_watch_img import ZNLSG_COCO
-from measure.step1_generate_library_embedding import data_dir
+from measure.step1_generate_aug_library_embedding import data_dir
 import re
 
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     library_cats_embeddings_dir = os.path.join(data_dir, 'b_embeddings', 'cats')
     library_annotations_file = os.path.join(data_dir, "b_annotations.json")
     eval_annotations_file = os.path.join(data_dir, "a_annotations.json")
-    pred_annotations_file = os.path.join(data_dir, "pred_a_annotations.json")
+    pred_annotations_file = os.path.join(data_dir, "pred_a_annotations_average.json")
     library_coco = ZNLSG_COCO(library_annotations_file)
     library_cats_embeddings_dic = {}
     library_cats_embeddings_files = sorted(os.listdir(library_cats_embeddings_dir), key=lambda x: int(x.split('.')[0]))

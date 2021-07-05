@@ -2,6 +2,7 @@
 
 import json
 import os
+import random
 import sys
 sys.path.append('..')
 import cv2
@@ -31,14 +32,24 @@ print('Normalizing by mean of %.4f, %.4f, %.4f' % (mean[0], mean[1], mean[2]))
 print('Normalizing by std of %.4f, %.4f, %.4f' % (std[0], std[1], std[2]))
 
 normalize = transforms.Normalize(mean=mean, std=std)
+img_size = 124
 mytrans = transforms.Compose([
-    transforms.Resize((224, 244)),
+    transforms.Resize((img_size, img_size)),
     # transforms.RandomHorizontalFlip(),
     # transforms.CenterCrop(64),
     transforms.ToTensor(),
     normalize
     # transforms.Normalize((.5, .5, .5), (.5, .5, .5)),
 ])
+mytrans_lib = transforms.Compose([
+    transforms.Resize((img_size, img_size)),
+    # transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(degrees=360),
+    transforms.ToTensor(),
+    normalize
+    # transforms.Normalize((.5, .5, .5), (.5, .5, .5)),
+])
+
 
 class ZNLSG_eval_imgs_dataset(Dataset):
     def __init__(self, labels_dir='a_labels'):
@@ -120,11 +131,57 @@ class ZNLSG_library_imgs_dataset(Dataset):
         img = Image.open(img_path)
         img = img.crop((x1, y1, x2, y2))
 
-        img = mytrans(img)
+        img = mytrans_lib(img)
         return img, category_id
 
     def __len__(self):
         return len(self.bbox_AnnIds)
+
+
+class ZNLSG_library_aug_imgs_dataset(Dataset):
+    def __init__(self, annotations_file='b_annotations', embedding_each_n=100):
+        # if less than 100 then data augment to 100 for each category
+        self.coco = ZNLSG_COCO(annotations_file)
+        self.data_dir = self.coco.data_dir
+        self.imgs_dir = self.coco.imgs_dir
+        self.bbox_AnnIds = self.coco.getAnnIds()
+        self.embedding_each_n = embedding_each_n
+        self.new_AnnsIds = []
+        self.genearte_aug_AnnsIds()
+
+    def genearte_aug_AnnsIds(self):
+        for catid in self.coco.getCatIds():
+            annids = self.coco.getAnnIds(catIds=catid)
+            num = len(annids)
+            if num == 0:
+                continue
+            elif num < self.embedding_each_n:
+                self.new_AnnsIds += annids*(self.embedding_each_n//num)
+                random.shuffle(annids)
+                self.new_AnnsIds += annids[:self.embedding_each_n % num]
+            else:
+                self.new_AnnsIds += annids
+
+    def __getitem__(self, id):
+        annotation_id = self.new_AnnsIds[id]
+        annotation_info = self.coco.anns[annotation_id]
+        image_id = annotation_info['image_id']
+        bbox = annotation_info['bbox']
+        x1, y1, w, h = bbox
+        x2 = x1 + w
+        y2 = y1 + h
+        category_id = annotation_info['category_id']
+        image_name = self.coco.loadImgs(image_id)[0]['file_name']
+        img_path = os.path.join(self.imgs_dir, image_name)
+        img = Image.open(img_path)
+        img = img.crop((x1, y1, x2, y2))
+
+        img = mytrans_lib(img)
+        return img, category_id
+
+    def __len__(self):
+        return len(self.new_AnnsIds)
+
 
 
 class ZNLSG_bboxes_embeddings_datasets(Dataset):
@@ -230,22 +287,36 @@ class GFKDtrack_dataset(Dataset):
 
 if __name__ == "__main__":
     #%%
-    data_dir = "../../../data/cssjj/train"
-    # annotation_file = os.path.join(data_dir, 'b_annotations.json')
-    # znlsg_library = ZNLSG_library_imgs_dataset(annotation_file)
+    data_dir = "../../../data/cssjj/test"
+    annotation_file = os.path.join(data_dir, 'b_annotations.json')
+    znlsg_library = ZNLSG_library_imgs_dataset(annotation_file)
+    znlsg_library_cats_num_dic = {}
+    for catid in znlsg_library.coco.getCatIds():
+        annids = znlsg_library.coco.getAnnIds(catIds=catid)
+
+
+        znlsg_library_cats_num_dic['catid'+str(catid)] = len(annids)
+    print(znlsg_library_cats_num_dic)
+    import matplotlib.pyplot as plt
+    plt.plot(list(znlsg_library_cats_num_dic.keys()), list(znlsg_library_cats_num_dic.values()))
+    plt.show()
+
+
+
     # to_image = transforms.ToPILImage()
     # img, category_id = znlsg_library[1000]
     # img = to_image(img)
     # img.show()
     #
     # print(category_id, znlsg_library.coco.loadCats(category_id)[0]['name'])
-    labels_dir = os.path.join(data_dir, 'a_labels')
-    znlsg_eval_datasets = ZNLSG_eval_imgs_dataset(labels_dir)
-    a = znlsg_eval_datasets[0]
-    to_image = transforms.ToPILImage()
-    img, img_name, bbox = znlsg_eval_datasets[1000]
-    img = to_image(img)
-    img.show()
+
+    # labels_dir = os.path.join(data_dir, 'a_labels')
+    # znlsg_eval_datasets = ZNLSG_eval_imgs_dataset(labels_dir)
+    # a = znlsg_eval_datasets[0]
+    # to_image = transforms.ToPILImage()
+    # img, img_name, bbox = znlsg_eval_datasets[1000]
+    # img = to_image(img)
+    # img.show()
 
 
 

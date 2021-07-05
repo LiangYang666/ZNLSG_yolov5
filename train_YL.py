@@ -165,6 +165,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
             epochs += ckpt['epoch']  # finetune additional epochs
 
         del ckpt, state_dict
+
     # Image sizes
     gs = int(max(model.stride))  # grid size (max stride)
     imgsz, imgsz_test = [check_img_size(x, gs) for x in opt.img_size]  # verify imgsz are gs-multiples
@@ -187,8 +188,6 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     # DDP mode
     if cuda and rank != -1:
         model = DDP(model, device_ids=[opt.local_rank], output_device=opt.local_rank)
-
-
     # Trainloader
     dataloader, dataset = create_dataloader(train_txt, imgsz, batch_size, gs, opt,
                                             hyp=hyp, augment=False, cache=opt.cache_images, rect=opt.rect, rank=rank,
@@ -229,6 +228,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     model.class_weights = labels_to_class_weights(dataset.labels, nc).to(device)  # attach class weights
     model.names = names
 
+
     # Start training
     t0 = time.time()
     nw = max(round(hyp['warmup_epochs'] * nb), 1000)  # number of warmup iterations, max(3 epochs, 1k iterations)
@@ -237,9 +237,11 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
     results = (0, 0, 0, 0, 0, 0, 0)  # P, R, mAP@.5, mAP@.5-.95, val_loss(box, obj, cls)
     scheduler.last_epoch = start_epoch - 1  # do not move
     scaler = amp.GradScaler(enabled=cuda)
+
     logger.info('Image sizes %g train, %g test\n'
                 'Using %g dataloader workers\nLogging results to %s\n'
                 'Starting training for %g epochs...' % (imgsz, imgsz_test, dataloader.num_workers, save_dir, epochs))
+
     for epoch in range(start_epoch, epochs):  # epoch ------------------------------------------------------------------
         model.train()
 
@@ -388,7 +390,7 @@ def train(hyp, opt, device, tb_writer=None, wandb=None):
 
                 # Save last, best and delete
                 ckp_info = opt.train_txt.split('.')[0]+f'_{nc}c'
-                if (epoch+1) % 10 == 0:
+                if (epoch+1) % opt.save_inter == 0:
                     torch.save(ckpt, str(wdir)+os.sep+f'ckp_{ckp_info}_epoch{epoch + 1}.pt')
                 torch.save(ckpt, last)
                 if best_fitness == fi:
@@ -431,6 +433,7 @@ if __name__ == '__main__':
     parser.add_argument('--data', type=str, default='data/znlsg.yaml', help='data.yaml path')
     parser.add_argument('--hyp', type=str, default='data/hyp.scratch.yaml', help='hyperparameters path')
     parser.add_argument('--epochs', type=int, default=300)
+    parser.add_argument('--save-inter', type=int, default=10, help='How long is the interval to save epoch')
     parser.add_argument('-b', '--batch-size', type=int, default=16, help='total batch size for all GPUs')
     parser.add_argument('--img-size', nargs='+', type=int, default=[960, 960], help='[train, test] image sizes')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
@@ -488,6 +491,9 @@ if __name__ == '__main__':
             opt = argparse.Namespace(**yaml.load(f, Loader=yaml.FullLoader))  # replace
         opt.cfg, opt.weights, opt.resume = '', ckpt, True
         logger.info('Resuming training from %s' % ckpt)
+        opt.save_dir = increment_path(Path(opt.data_dir).parent / 'yolov5_rundata/train',
+                                      exist_ok=opt.exist_ok | opt.evolve)
+
     else:
         # opt.hyp = opt.hyp or ('hyp.finetune.yaml' if opt.weights else 'hyp.scratch.yaml')
         opt.data, opt.cfg, opt.hyp = check_file(opt.data), check_file(opt.cfg), check_file(opt.hyp)  # check files
@@ -497,6 +503,7 @@ if __name__ == '__main__':
         # save_name_add = opt.train_txt.split('.')[0]     # 名称中要增加保存的字符
         # opt.save_dir = increment_path(Path(opt.data_dir).parent / 'train' /(opt.name+f'_{save_name_add}_'), exist_ok=opt.exist_ok | opt.evolve)  # increment run
         opt.save_dir = increment_path(Path(opt.data_dir).parent / 'yolov5_rundata/train', exist_ok=opt.exist_ok | opt.evolve)
+        opt.cfg = ''
 
     # DDP mode
     device = select_device(opt.device, batch_size=opt.batch_size)

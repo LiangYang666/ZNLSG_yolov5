@@ -72,7 +72,7 @@ if __name__ == '__main__':
     test_b_annotations_file = os.path.join(data_dir, "cssjj/test/b_annotations.json")
 
     # train_a_coco = ZNLSG_COCO(train_a_annotations_file)
-    generate_all_labels_from_json(train_b_annotations_file)
+    generate_all_labels_from_json(test_b_annotations_file)
 
 
 

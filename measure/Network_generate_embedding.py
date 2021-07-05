@@ -38,12 +38,17 @@ def resnet18_embedding():
     model._forward_impl = types.MethodType(_forward_impl, model)
     del model.fc
     return model
+# ckp_dir = '/media/D_4TB/YL_4TB/Competitions/ZNLSG_21_XinYe/data/cssjj/rundata/metalearning/models_trained/2ResNet50_dataaug_fc512_l2/checkpoints/checkpoint_30.pt'
+# ckp_dir = '/media/D_4TB/YL_4TB/Competitions/ZNLSG_21_XinYe/data/cssjj/rundata/metalearning/models_trained/3ResNet50_dataaug_fc512_cos/checkpoints/checkpoint_315.pt'
+ckp_dir = '/media/D_4TB/YL_4TB/Competitions/ZNLSG_21_XinYe/data/cssjj/rundata/metalearning/models_trained/3ResNet50_w100_dataaug_fc512_cos/checkpoints/checkpoint_195.pt'
 
-def prototypical_net(pretrained_dict = '/media/D_4TB/YL_4TB/Competitions/ZNLSG_21_XinYe/data/cssjj/rundata/metalearning/models_trained/ResNet50/checkpoints/checkpoint_175.pt'):
+def prototypical_net(pretrained_dict = ckp_dir):
     model = torchvision.models.__dict__['resnet50'](pretrained=False)
     # model.fc = Identity()
     lin = nn.Linear(model.fc.in_features, 512)
     model.fc = lin
+    print('Loadding model from\n'
+          '\t'+ckp_dir)
     checkpoint = torch.load(pretrained_dict)
     model.load_state_dict(checkpoint['state_dict'])
     return model
